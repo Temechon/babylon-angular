@@ -1,3 +1,3 @@
 # BabylonAngular
 
-Base project for the formation *Babylon.js*
+Base project to run Babylon.js in an angular app
