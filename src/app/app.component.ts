@@ -12,7 +12,9 @@ import {
   StandardMaterial,
   DynamicTexture,
   ArcRotateCamera,
-  FreeCamera
+  FreeCamera,
+  BaseTexture,
+  Texture
 } from 'babylonjs';
 
 
@@ -53,34 +55,25 @@ export class AppComponent {
 
 
     this.camera = new ArcRotateCamera('', 0, 0, 20, Vector3.Zero(), this.scene);
-
-    let camera = new FreeCamera("camera1", new Vector3(0, 5, -10), this.scene);
     this.camera.attachControl(this.canvas, false);
 
 
     this.light = new HemisphericLight('light1', new Vector3(0, 1, 0), this.scene);
 
-
     this.sphere = Mesh.CreateSphere('sphere1', 16, 2, this.scene);
-
-
     this.sphere.visibility = 0;
 
+
+    const groundMat = new StandardMaterial("groundMat", this.scene);
+    groundMat.diffuseColor = new BABYLON.Color3(0, 1, 0)
+
+
+    groundMat.diffuseTexture = new Texture("assets/roof.jpg", this.scene);
+
     let cube = Mesh.CreateBox('box', 1, this.scene);
-
-    // simple rotation along the y axis
-    this.scene.registerAfterRender(() => {
+    cube.material = groundMat;
 
 
-      cube.translate(
-        new Vector3(0, 0.02, 0),
-        1,
-        BABYLON.Space.LOCAL
-      );
-
-      // cube.position.x += 0.1
-
-    });
 
     this.showWorldAxis(8);
   }
