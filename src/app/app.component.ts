@@ -14,8 +14,12 @@ import {
   ArcRotateCamera,
   FreeCamera,
   BaseTexture,
-  Texture
+  Texture,
+  AssetsManager,
+  GizmoManager
 } from 'babylonjs';
+import 'babylonjs-loaders'
+
 
 
 @Component({
@@ -42,7 +46,7 @@ export class AppComponent {
   public rendererCanvas: ElementRef<HTMLCanvasElement>;
 
 
-  public ngAfterViewInit(): void {
+  public ngOnInit(): void {
     this.createScene(this.rendererCanvas);
     this.animate();
   }
@@ -64,18 +68,38 @@ export class AppComponent {
     this.sphere.visibility = 0;
 
 
-    const groundMat = new StandardMaterial("groundMat", this.scene);
-    groundMat.diffuseColor = new BABYLON.Color3(0, 1, 0)
+    const assetsManager = new AssetsManager(this.scene);
+
+    let gizmoManager = new GizmoManager(this.scene);
+    gizmoManager.positionGizmoEnabled = true;
+
+    const meshTask = assetsManager.addMeshTask("unknown", "", "assets/3D/", "Bee.glb");
 
 
-    groundMat.diffuseTexture = new Texture("assets/roof.jpg", this.scene);
+    meshTask.onSuccess = (task) => {
+      console.log(task.loadedMeshes);
+    }
 
-    let cube = Mesh.CreateBox('box', 1, this.scene);
-    cube.material = groundMat;
+    meshTask.onError = (task) => {
+      console.log("error");
+    }
+
+    assetsManager.onFinish = function (tasks) {
+      console.log("Finished!");
+    };
+
+    assetsManager.onTaskSuccess = () => {
+      console.log("ici");
+
+    };
+    assetsManager.load();
 
 
 
-    this.showWorldAxis(8);
+
+
+
+    // this.showWorldAxis(8);
   }
 
   public animate(): void {
