@@ -16,7 +16,10 @@ import {
   BaseTexture,
   Texture,
   AssetsManager,
-  GizmoManager
+  GizmoManager,
+  MeshAssetTask,
+  AbstractMesh,
+  Node
 } from 'babylonjs';
 import 'babylonjs-loaders'
 
@@ -39,6 +42,8 @@ export class AppComponent {
 
   private sphere: Mesh;
 
+  private assets: Map<string, Node> = new Map();
+  s
   public constructor(
   ) { }
 
@@ -58,6 +63,9 @@ export class AppComponent {
     this.scene = new Scene(this.engine);
 
 
+    // let gizmoManager = new GizmoManager(this.scene);
+    // gizmoManager.positionGizmoEnabled = true;
+
     this.camera = new ArcRotateCamera('', 0, 0, 20, Vector3.Zero(), this.scene);
     this.camera.attachControl(this.canvas, false);
 
@@ -65,27 +73,37 @@ export class AppComponent {
     this.light = new HemisphericLight('light1', new Vector3(0, 1, 0), this.scene);
 
     this.sphere = Mesh.CreateSphere('sphere1', 16, 2, this.scene);
-    this.sphere.visibility = 0;
+    // this.sphere.visibility = 0;
 
 
     const assetsManager = new AssetsManager(this.scene);
 
-    let gizmoManager = new GizmoManager(this.scene);
-    gizmoManager.positionGizmoEnabled = true;
 
-    const meshTask = assetsManager.addMeshTask("unknown", "", "assets/3D/", "Bee.glb");
-
-
-    meshTask.onSuccess = (task) => {
-      console.log(task.loadedMeshes);
-    }
+    const meshTask = assetsManager.addMeshTask("chaise", "", "assets/3D/", "Bee.glb");
+    meshTask.onSuccess = this.saveMesh.bind(this, "chaise");
 
     meshTask.onError = (task) => {
       console.log("error");
     }
 
-    assetsManager.onFinish = function (tasks) {
+    assetsManager.onProgress = (rc, total) => {
+      console.log(rc, total);
+    }
+
+    let gm = new GizmoManager(this.scene);
+    gm.positionGizmoEnabled = true;
+    // gm.rotationGizmoEnabled = true;
+    // gm.scaleGizmoEnabled = true;
+    gm.boundingBoxGizmoEnabled = true;
+
+    assetsManager.onFinish = (tasks) => {
       console.log("Finished!");
+
+      let node = this.assets.get("chaise");
+      let children = node.getChildMeshes();
+
+      gm.usePointerToAttachGizmos = false;
+      gm.attachToNode(node);
     };
 
     assetsManager.onTaskSuccess = () => {
@@ -94,7 +112,7 @@ export class AppComponent {
     };
     assetsManager.load();
 
-
+    this.scene.debugLayer.show();
 
 
 
@@ -102,15 +120,22 @@ export class AppComponent {
     // this.showWorldAxis(8);
   }
 
+  saveMesh(name: string, t: MeshAssetTask) {
+
+    let node = new Mesh(name, this.scene);
+
+
+    for (let tt of t.loadedMeshes) {
+      tt.parent = node;
+    }
+    // node.isPickable = true;
+    this.assets.set(name, node);
+  }
+
   public animate(): void {
-
-
-    window.addEventListener('DOMContentLoaded', () => {
-      this.engine.runRenderLoop(() => {
-        this.scene.render();
-      });
+    this.engine.runRenderLoop(() => {
+      this.scene.render();
     });
-
     window.addEventListener('resize', () => {
       this.engine.resize();
     });
